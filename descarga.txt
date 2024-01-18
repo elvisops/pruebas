@@ -1,17 +1,16 @@
-open sftp://root:ops2024admin@10.8.8.115/
-option batch abort
-option confirm off
+@echo off
+set WINSCP_PATH=C:\Program Files (x86)\WinSCP\WinSCP.com
+set SCRIPT_PATH=%TEMP%\script.txt
 
-# Generar el nombre del directorio basado en la fecha actual en formato yyyymmdd
-call echo open sftp://root:ops2024admin@10.8.8.115/ > "%TEMP%\script.tmp"
-call echo option batch abort >> "%TEMP%\script.tmp"
-call echo option confirm off >> "%TEMP%\script.tmp"
-call echo set REMOTE_DIR_FORMAT=%TIMESTAMP#yyyymmdd% >> "%TEMP%\script.tmp"
-call echo set REMOTE_BASE_DIR=/prueba/%REMOTE_DIR_FORMAT% >> "%TEMP%\script.tmp"
-call echo mkdir !REMOTE_BASE_DIR! >> "%TEMP%\script.tmp"
-call echo cd !REMOTE_BASE_DIR! >> "%TEMP%\script.tmp"
-call echo lcd D:\MONITOREO\1000 >> "%TEMP%\script.tmp"
-call echo synchronize local -delete -mirror >> "%TEMP%\script.tmp"
-call echo exit >> "%TEMP%\script.tmp"
+echo open sftp://root:ops2024admin@10.8.8.115/ > "%SCRIPT_PATH%"
+echo option batch abort >> "%SCRIPT_PATH%"
+echo option confirm off >> "%SCRIPT_PATH%"
+echo set REMOTE_DIR_FORMAT=%TIMESTAMP#yyyymmdd% >> "%SCRIPT_PATH%"
+echo set REMOTE_BASE_DIR=/prueba/%REMOTE_DIR_FORMAT% >> "%SCRIPT_PATH%"
+echo mkdir !REMOTE_BASE_DIR! >> "%SCRIPT_PATH%"
+echo cd !REMOTE_BASE_DIR! >> "%SCRIPT_PATH%"
+echo lcd D:\MONITOREO\1000 >> "%SCRIPT_PATH%"
+echo synchronize local -delete -mirror >> "%SCRIPT_PATH%"
+echo exit >> "%SCRIPT_PATH%"
 
-winscp.com /script="%TEMP%\script.tmp"
+"%WINSCP_PATH%" /script="%SCRIPT_PATH%"
