@@ -1,16 +1,49 @@
 @echo off
+setlocal enabledelayedexpansion
+
 set WINSCP_PATH=C:\Program Files (x86)\WinSCP\WinSCP.com
-set SCRIPT_PATH=%TEMP%\script.txt
+set LOCAL_PATH=C:\Users\elvis.godoy\Downloads\data\
+set REMOTE_PATH=/prueba/
 
-echo open sftp://root:ops2024admin@10.8.8.115/ > "%SCRIPT_PATH%"
-echo option batch abort >> "%SCRIPT_PATH%"
-echo option confirm off >> "%SCRIPT_PATH%"
-echo set REMOTE_DIR_FORMAT=%TIMESTAMP#yyyymmdd% >> "%SCRIPT_PATH%"
-echo set REMOTE_BASE_DIR=/prueba/%REMOTE_DIR_FORMAT% >> "%SCRIPT_PATH%"
-echo mkdir !REMOTE_BASE_DIR! >> "%SCRIPT_PATH%"
-echo cd !REMOTE_BASE_DIR! >> "%SCRIPT_PATH%"
-echo lcd D:\MONITOREO\1000 >> "%SCRIPT_PATH%"
-echo synchronize local -delete -mirror >> "%SCRIPT_PATH%"
-echo exit >> "%SCRIPT_PATH%"
+REM Obtén la fecha actual en el formato YYYYMMDD
+for /f "delims=" %%a in ('powershell Get-Date -Format "yyyyMMdd"') do set "current_date=%%a"
 
-"%WINSCP_PATH%" /script="%SCRIPT_PATH%"
+REM Crear el script de WinSCP dinámicamente
+(
+    echo open sftp://root:0ps2022admin@10.8.8.115/
+    echo cd /prueba/
+    
+    REM Crear carpeta con la fecha actual en formato YYYYMMDD
+    echo mkdir !current_date!
+    echo cd !current_date!
+    
+    REM Itera sobre los archivos en la carpeta local y agrega la instrucción put al script
+    for %%F in ("%LOCAL_PATH%*.mp3") do (
+        set "file_name=%%~nF"
+        for /f "delims=" %%D in ('powershell -command "& { $file = '%%~nF'; $datePart = $file -split '-'; $date = $datePart[-1].Substring(0,8); $date }"') do set "file_date=%%D"
+
+        if defined file_date (
+            if !file_date! equ !current_date! (
+                echo put "%LOCAL_PATH%!file_name!.mp3"
+            ) else (
+                echo Archivo con formato correcto pero fecha incorrecta: %%F
+            )
+        ) else (
+            echo Archivo con formato incorrecto: %%F
+        )
+    )
+
+    REM Agregar el resto del script
+    echo exit
+) > script.txt
+
+REM Ejecutar WinSCP con el script generado dinámicamente
+"%WINSCP_PATH%" < script.txt
+
+REM Eliminar el archivo temporal después de su uso
+del script.txt
+
+echo Presiona una tecla para salir.
+pause > nul
+
+endlocal
